@@ -1,3 +1,4 @@
+using BabyFoodChecklist.Domain.Events;
 using BabyFoodChecklist.Infrastructure.Data.Interceptors;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -17,6 +18,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Ignore<BaseEvent>();
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }
