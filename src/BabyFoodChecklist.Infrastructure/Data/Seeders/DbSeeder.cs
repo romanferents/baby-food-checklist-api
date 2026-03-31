@@ -175,7 +175,7 @@ public static class DbSeeder
             ("Мигдаль", "Almond"),
             ("Соняшникове насіння", "Sunflower Seeds"),
             ("Фундук", "Hazelnut"),
-            ("Chia", "Chia Seeds"),
+            ("Чіа", "Chia Seeds"),
             ("Фісташки", "Pistachios"),
         };
 

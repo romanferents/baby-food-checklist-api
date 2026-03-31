@@ -33,7 +33,9 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             Status = statusCode,
             Title = title,
             Detail = exception.Message,
-            Type = $"https://tools.ietf.org/html/rfc7231#section-6.5.{statusCode / 100}",
+            Type = statusCode >= 500
+                ? "https://tools.ietf.org/html/rfc7231#section-6.6"
+                : "https://tools.ietf.org/html/rfc7231#section-6.5",
         };
 
         if (exception is BabyFoodChecklist.Application.Common.Exceptions.ValidationException validationException)
