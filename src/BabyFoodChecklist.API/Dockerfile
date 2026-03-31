@@ -4,16 +4,14 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-
+COPY ["Directory.Build.props", "."]
+COPY ["Directory.Packages.props", "."]
 COPY ["src/BabyFoodChecklist.API/BabyFoodChecklist.API.csproj", "src/BabyFoodChecklist.API/"]
 COPY ["src/BabyFoodChecklist.Application/BabyFoodChecklist.Application.csproj", "src/BabyFoodChecklist.Application/"]
-COPY ["src/BabyFoodChecklist.Domain/BabyFoodChecklist.Domain.csproj", "src/BabyFoodChecklist.Domain/"]
 COPY ["src/BabyFoodChecklist.Infrastructure/BabyFoodChecklist.Infrastructure.csproj", "src/BabyFoodChecklist.Infrastructure/"]
-
+COPY ["src/BabyFoodChecklist.Domain/BabyFoodChecklist.Domain.csproj", "src/BabyFoodChecklist.Domain/"]
 RUN dotnet restore "src/BabyFoodChecklist.API/BabyFoodChecklist.API.csproj"
-
 COPY . .
-
 WORKDIR "/src/src/BabyFoodChecklist.API"
 RUN dotnet build "BabyFoodChecklist.API.csproj" -c Release -o /app/build
 

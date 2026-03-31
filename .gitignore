@@ -1,33 +1,9 @@
-## Ignore build artifacts
 bin/
 obj/
 *.user
-*.suo
 .vs/
-.vscode/
-*.swp
-
-## Ignore NuGet restore
-.nuget/
-packages/
-*.nupkg
-
-## Ignore Docker volumes
-postgres_data/
-
-## Logs
-*.log
+.idea/
+*.suo
+*.DS_Store
 logs/
-
-## Published output
-publish/
-dist/
-
-## OS files
-.DS_Store
-Thumbs.db
-
-## Test results
 TestResults/
-coverage/
-*.trx

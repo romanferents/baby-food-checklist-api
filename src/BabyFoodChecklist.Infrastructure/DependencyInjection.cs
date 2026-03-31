@@ -1,29 +1,28 @@
-using BabyFoodChecklist.Domain.Interfaces;
-using BabyFoodChecklist.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using BabyFoodChecklist.Infrastructure.Data;
+using BabyFoodChecklist.Infrastructure.Data.Interceptors;
+using BabyFoodChecklist.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BabyFoodChecklist.Infrastructure;
 
-/// <summary>
-/// Extension methods for registering Infrastructure layer services.
-/// </summary>
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Adds Infrastructure layer services (database, repositories, UoW) to the DI container.
-    /// </summary>
-    public static IServiceCollection AddInfrastructureServices(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+        services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
 
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory"));
+            options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+        });
+
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+
+        services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 
         return services;
     }

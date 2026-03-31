@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -28,21 +28,8 @@ jobs:
       - name: Build
         run: dotnet build BabyFoodChecklist.sln --no-restore -c Release
 
-      - name: Run unit tests
-        run: >
-          dotnet test tests/BabyFoodChecklist.Tests.Unit
-          --no-build
-          -c Release
-          --logger trx
-          --results-directory TestResults
-
-      - name: Run integration tests
-        run: >
-          dotnet test tests/BabyFoodChecklist.Tests.Integration
-          --no-build
-          -c Release
-          --logger trx
-          --results-directory TestResults
+      - name: Run tests
+        run: dotnet test BabyFoodChecklist.sln --no-build -c Release --logger trx --results-directory TestResults
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
