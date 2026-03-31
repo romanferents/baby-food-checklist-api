@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyFoodChecklist.Tests</AssemblyName>
+    <RootNamespace>BabyFoodChecklist.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BabyFoodChecklist.Application\BabyFoodChecklist.Application.csproj" />
+    <ProjectReference Include="..\..\src\BabyFoodChecklist.Infrastructure\BabyFoodChecklist.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\BabyFoodChecklist.API\BabyFoodChecklist.API.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="AutoFixture" />
+    <PackageReference Include="AutoFixture.AutoMoq" />
+    <PackageReference Include="AutoFixture.NUnit3" />
+    <PackageReference Include="MockQueryable.Moq" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+</Project>

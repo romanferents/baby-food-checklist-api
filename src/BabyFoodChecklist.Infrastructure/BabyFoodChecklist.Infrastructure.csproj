@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyFoodChecklist.Infrastructure</AssemblyName>
+    <RootNamespace>BabyFoodChecklist.Infrastructure</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BabyFoodChecklist.Application\BabyFoodChecklist.Application.csproj" />
+    <ProjectReference Include="..\BabyFoodChecklist.Domain\BabyFoodChecklist.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.AspNetCore.OData" />
+    <PackageReference Include="Microsoft.OData.Edm" />
+    <PackageReference Include="Microsoft.OData.Core" />
+  </ItemGroup>
+</Project>

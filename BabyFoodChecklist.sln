@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{336979FE-638E-4C34-A8B5-3B3EE96F3055}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BabyFoodChecklist.Domain", "src\BabyFoodChecklist.Domain\BabyFoodChecklist.Domain.csproj", "{07F6FE73-56C6-4561-B1B5-A4C93833B3CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BabyFoodChecklist.Application", "src\BabyFoodChecklist.Application\BabyFoodChecklist.Application.csproj", "{59E41972-80E2-403D-A7A3-6C1C52FD1D48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BabyFoodChecklist.Infrastructure", "src\BabyFoodChecklist.Infrastructure\BabyFoodChecklist.Infrastructure.csproj", "{47794C8C-8212-498E-9214-D1D2B147EB43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BabyFoodChecklist.API", "src\BabyFoodChecklist.API\BabyFoodChecklist.API.csproj", "{4F860F83-772C-4069-8B5A-C1ED2ABA1435}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{162C6DB1-3610-4D3E-BAF8-4CE70201840A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BabyFoodChecklist.Tests", "tests\BabyFoodChecklist.Tests\BabyFoodChecklist.Tests.csproj", "{8FCD5BF0-BE5F-4268-B3AF-99B5C924E60A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{07F6FE73-56C6-4561-B1B5-A4C93833B3CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07F6FE73-56C6-4561-B1B5-A4C93833B3CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07F6FE73-56C6-4561-B1B5-A4C93833B3CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07F6FE73-56C6-4561-B1B5-A4C93833B3CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59E41972-80E2-403D-A7A3-6C1C52FD1D48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59E41972-80E2-403D-A7A3-6C1C52FD1D48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59E41972-80E2-403D-A7A3-6C1C52FD1D48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59E41972-80E2-403D-A7A3-6C1C52FD1D48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47794C8C-8212-498E-9214-D1D2B147EB43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47794C8C-8212-498E-9214-D1D2B147EB43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47794C8C-8212-498E-9214-D1D2B147EB43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47794C8C-8212-498E-9214-D1D2B147EB43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F860F83-772C-4069-8B5A-C1ED2ABA1435}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F860F83-772C-4069-8B5A-C1ED2ABA1435}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F860F83-772C-4069-8B5A-C1ED2ABA1435}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F860F83-772C-4069-8B5A-C1ED2ABA1435}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FCD5BF0-BE5F-4268-B3AF-99B5C924E60A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FCD5BF0-BE5F-4268-B3AF-99B5C924E60A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FCD5BF0-BE5F-4268-B3AF-99B5C924E60A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FCD5BF0-BE5F-4268-B3AF-99B5C924E60A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{07F6FE73-56C6-4561-B1B5-A4C93833B3CD} = {336979FE-638E-4C34-A8B5-3B3EE96F3055}
+		{59E41972-80E2-403D-A7A3-6C1C52FD1D48} = {336979FE-638E-4C34-A8B5-3B3EE96F3055}
+		{47794C8C-8212-498E-9214-D1D2B147EB43} = {336979FE-638E-4C34-A8B5-3B3EE96F3055}
+		{4F860F83-772C-4069-8B5A-C1ED2ABA1435} = {336979FE-638E-4C34-A8B5-3B3EE96F3055}
+		{8FCD5BF0-BE5F-4268-B3AF-99B5C924E60A} = {162C6DB1-3610-4D3E-BAF8-4CE70201840A}
+	EndGlobalSection
+EndGlobal
