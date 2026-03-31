@@ -32,7 +32,7 @@ This API serves as the backend for an Expo/React Native mobile app. Features:
 - ✅ **User entries** — track tried status, first-tried date, rating (Liked/Neutral/Disliked), notes
 - 📊 **Statistics** — overall and per-category progress percentage
 - 🌍 **Bilingual** — Ukrainian & English names for all products and categories
-- 📄 **Pagination, filtering & search** on all list endpoints
+- 📄 **OData support** — `$filter`, `$select`, `$orderby`, `$top`, `$skip`, `$count` on list endpoints
 - 🏥 **Health check** endpoint for monitoring
 
 ---
@@ -47,10 +47,12 @@ This API serves as the backend for an Expo/React Native mobile app. Features:
 | Architecture | Clean Architecture (Domain → Application → Infrastructure → API) |
 | CQRS | MediatR 12 |
 | Validation | FluentValidation 11 |
-| Logging | Serilog (structured, console sink) |
+| Mapping | AutoMapper 13 |
+| OData | Microsoft.AspNetCore.OData 9 |
+| Logging | Serilog (structured, console + file sinks) |
 | API Versioning | Asp.Versioning 8 |
 | Documentation | Swagger / OpenAPI (Swashbuckle 6) |
-| Testing | xUnit + FluentAssertions + Moq |
+| Testing | xUnit + FluentAssertions + Moq + AutoFixture |
 | Containerization | Docker + docker-compose |
 
 ---
@@ -65,13 +67,13 @@ The solution follows **Clean Architecture** with strict dependency rules:
 │  • Controllers, Middleware, Program.cs                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  Infrastructure (BabyFoodChecklist.Infrastructure)              │
-│  • EF Core DbContext, Migrations, Repositories, UoW, Seeder     │
+│  • EF Core DbContext, Entity Configurations, Repositories, Seeder │
 ├─────────────────────────────────────────────────────────────────┤
 │  Application (BabyFoodChecklist.Application)                    │
-│  • CQRS Queries/Commands (MediatR), Validators, DTOs            │
+│  • CQRS Queries/Commands (MediatR), Validators, DTOs, Mapping   │
 ├─────────────────────────────────────────────────────────────────┤
 │  Domain (BabyFoodChecklist.Domain)                              │
-│  • Entities (Product, UserProductEntry), Enums, Interfaces      │
+│  • Entities (Product, UserProductEntry), Events, Enums, Interfaces│
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -130,38 +132,29 @@ Interactive Swagger UI is available at the root URL when the API is running.
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/v1/products` | List products (pagination, category filter, search) |
 | `GET` | `/api/v1/products/{id}` | Get product by ID |
 | `POST` | `/api/v1/products` | Create custom product |
 | `PUT` | `/api/v1/products/{id}` | Update custom product |
 | `DELETE` | `/api/v1/products/{id}` | Delete custom product |
-| `GET` | `/api/v1/entries` | List user entries (filter by tried, favorite, category) |
-| `GET` | `/api/v1/entries/{productId}` | Get entry for a product |
 | `POST` | `/api/v1/entries` | Create or update entry (upsert) |
-| `PUT` | `/api/v1/entries/{id}` | Update entry by ID |
 | `DELETE` | `/api/v1/entries/{id}` | Delete entry |
 | `GET` | `/api/v1/statistics` | Get overall + per-category stats |
 | `GET` | `/api/v1/categories` | List all categories with UA/EN names |
 | `GET` | `/health` | Database health check |
 
-### Pagination Query Parameters
+### OData Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/odata/v1/Products` | Query products (supports `$filter`, `$select`, `$orderby`, `$top`, `$skip`, `$count`, `$expand`) |
+| `GET` | `/odata/v1/Entries` | Query user entries (same OData operators) |
+
+### OData Query Parameters
+
+List endpoints use OData for filtering, sorting, and pagination:
 
 ```
-?page=1&pageSize=20
-```
-
-All list endpoints return:
-
-```json
-{
-  "items": [...],
-  "totalCount": 126,
-  "page": 1,
-  "pageSize": 20,
-  "totalPages": 7,
-  "hasPreviousPage": false,
-  "hasNextPage": true
-}
+/odata/v1/Products?$filter=Category eq 'Fruits'&$orderby=SortOrder&$top=20&$skip=0&$count=true
 ```
 
 ### Error Responses (RFC 7807)
@@ -205,26 +198,13 @@ dotnet ef database update --project src/BabyFoodChecklist.Infrastructure --start
 dotnet test BabyFoodChecklist.sln
 ```
 
-### Run Unit Tests Only
-
-```bash
-dotnet test tests/BabyFoodChecklist.Tests.Unit
-```
-
-### Run Integration Tests Only
-
-```bash
-dotnet test tests/BabyFoodChecklist.Tests.Integration
-```
-
 ### Test Coverage Areas
 
-- ✅ Product query handlers (GetById, GetAll)
-- ✅ Product command handlers (Create, Update, Delete)
-- ✅ Entry command handlers (Create with upsert, Delete)
-- ✅ Category helper (localization)
-- ✅ Seed data validation (100+ products, unique sort orders)
-- ✅ Categories query (all 9 categories)
+- ✅ Product query handlers (GetById)
+- ✅ Product command handlers (Create)
+- ✅ Entry command validators (UpsertEntry)
+- ✅ Categories query handler
+- ✅ Products controller (Create, GetById, Update, Delete)
 
 ---
 
@@ -257,30 +237,34 @@ dotnet test tests/BabyFoodChecklist.Tests.Integration
 ```
 baby-food-checklist-api/
 ├── src/
-│   ├── BabyFoodChecklist.Domain/        # Entities, enums, repository interfaces
-│   │   ├── Entities/                    # Product, UserProductEntry, CustomProduct
+│   ├── BabyFoodChecklist.Domain/        # Entities, events, enums, interfaces
+│   │   ├── Common/                      # BaseEntity, BaseAuditableEntity, NamedEntity
+│   │   ├── Entities/                    # Product, UserProductEntry
 │   │   ├── Enums/                       # ProductCategory, FoodRating
-│   │   └── Interfaces/                  # IProductRepository, IUnitOfWork
+│   │   ├── Events/                      # BaseEvent (domain events)
+│   │   └── Interfaces/                  # IApplicationDbContext, IBaseRepository
 │   │
-│   ├── BabyFoodChecklist.Application/   # CQRS, DTOs, validators, behaviors
-│   │   ├── Common/                      # PagedResult, exceptions, validation behavior
+│   ├── BabyFoodChecklist.Application/   # CQRS, DTOs, validators, mapping, behaviors
+│   │   ├── Common/                      # Exceptions, validation & logging behaviors
 │   │   ├── DTOs/                        # ProductDto, UserProductEntryDto, etc.
-│   │   └── Features/                    # Products, Entries, Statistics, Categories
+│   │   ├── Features/                    # Products, Entries, Statistics, Categories
+│   │   └── MappingProfiles/             # AutoMapper profiles
 │   │
 │   ├── BabyFoodChecklist.Infrastructure/  # EF Core, repositories, seeder
-│   │   ├── Persistence/                 # DbContext, configurations, seeder, UoW
-│   │   └── Repositories/               # ProductRepository, UserProductEntryRepository
+│   │   ├── Data/                        # DbContext, entity configurations, OData, seeders, interceptors
+│   │   └── Repositories/               # BaseRepository<T>
 │   │
 │   └── BabyFoodChecklist.API/           # Controllers, middleware, startup
-│       ├── Controllers/                 # Products, Entries, Statistics, Categories
+│       ├── Controllers/                 # Products, Entries, Statistics, Categories + OData
 │       └── Middleware/                  # ExceptionHandlingMiddleware
 │
 ├── tests/
-│   ├── BabyFoodChecklist.Tests.Unit/    # Handler unit tests
-│   └── BabyFoodChecklist.Tests.Integration/  # Service-level integration tests
+│   └── BabyFoodChecklist.Tests/         # Unit tests (xUnit + Moq + AutoFixture)
 │
 ├── docker-compose.yml
 ├── BabyFoodChecklist.sln
+├── Directory.Build.props
+├── Directory.Packages.props
 ├── global.json
 └── .editorconfig
 ```
@@ -333,8 +317,8 @@ docker-compose up -d
 
 | Service | URL |
 |---|---|
-| API | http://localhost:8080 |
-| pgAdmin | http://localhost:5050 (admin@babyfood.local / admin) |
+| API | http://localhost:5247 |
+| pgAdmin | http://localhost:5050 (admin@admin.com / admin) |
 | PostgreSQL | localhost:5432 |
 
 ### Start only the database (for local development)
