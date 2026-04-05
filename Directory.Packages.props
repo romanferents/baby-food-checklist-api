@@ -31,5 +31,8 @@
     <PackageVersion Include="AutoFixture.NUnit3" Version="4.18.1" />
     <PackageVersion Include="MockQueryable.Moq" Version="7.0.3" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="ModelContextProtocol" Version="1.2.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
   </ItemGroup>
 </Project>
