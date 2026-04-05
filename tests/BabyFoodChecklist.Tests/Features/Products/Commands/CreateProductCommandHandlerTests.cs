@@ -9,12 +9,15 @@ namespace BabyFoodChecklist.Tests.Features.Products.Commands;
 public class CreateProductCommandHandlerTests
 {
     private Mock<IApplicationDbContext> _contextMock = null!;
+    private Mock<ICurrentUserService> _currentUserMock = null!;
     private IMapper _mapper = null!;
 
     [SetUp]
     public void SetUp()
     {
         _contextMock = new Mock<IApplicationDbContext>();
+        _currentUserMock = new Mock<ICurrentUserService>();
+        _currentUserMock.Setup(c => c.UserId).Returns(Guid.NewGuid());
         var config = new MapperConfiguration(c => c.AddProfile<ProductMappingProfile>(), NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
     }
@@ -33,7 +36,7 @@ public class CreateProductCommandHandlerTests
             Category = ProductCategory.Other,
         };
 
-        var handler = new CreateProductCommandHandler(_contextMock.Object, _mapper);
+        var handler = new CreateProductCommandHandler(_contextMock.Object, _mapper, _currentUserMock.Object);
 
         var result = await handler.Handle(command, CancellationToken.None);
 

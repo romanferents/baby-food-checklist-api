@@ -17,3 +17,4 @@ global using BabyFoodChecklist.Domain.Enums;
 global using BabyFoodChecklist.Domain.Interfaces;
 global using BabyFoodChecklist.Application.DTOs;
 global using BabyFoodChecklist.Application.Common.Helpers;
+global using BabyFoodChecklist.Application.Common.Interfaces;

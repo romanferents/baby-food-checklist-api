@@ -3,12 +3,14 @@ using BabyFoodChecklist.Application.Features.Products.Commands.CreateProduct;
 using BabyFoodChecklist.Application.Features.Products.Commands.DeleteProduct;
 using BabyFoodChecklist.Application.Features.Products.Commands.UpdateProduct;
 using BabyFoodChecklist.Application.Features.Products.Queries.GetProductById;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BabyFoodChecklist.API.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
+[Authorize]
 public class ProductsController(ISender sender) : ControllerBase
 {
     [HttpGet("{id:guid}")]

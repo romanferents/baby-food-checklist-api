@@ -12,15 +12,16 @@ A production-grade **ASP.NET Core 8 Web API** backend for the *"100 First Foods"
 4. [Prerequisites](#prerequisites)
 5. [Getting Started on Windows](#getting-started-on-windows)
 6. [API Documentation](#api-documentation)
-7. [Database](#database)
-8. [Testing](#testing)
-9. [Configuration](#configuration)
-10. [Project Structure](#project-structure)
-11. [Seed Data](#seed-data)
-12. [Localization](#localization)
-13. [Docker](#docker)
-14. [Contributing](#contributing)
-15. [License](#license)
+7. [MCP Server](#mcp-server)
+8. [Database](#database)
+9. [Testing](#testing)
+10. [Configuration](#configuration)
+11. [Project Structure](#project-structure)
+12. [Seed Data](#seed-data)
+13. [Localization](#localization)
+14. [Docker](#docker)
+15. [Contributing](#contributing)
+16. [License](#license)
 
 ---
 
@@ -34,6 +35,7 @@ This API serves as the backend for an Expo/React Native mobile app. Features:
 - 🌍 **Bilingual** — Ukrainian & English names for all products and categories
 - 📄 **OData support** — `$filter`, `$select`, `$orderby`, `$top`, `$skip`, `$count` on list endpoints
 - 🏥 **Health check** endpoint for monitoring
+- 🤖 **MCP Server** — Model Context Protocol server for AI assistant integration
 
 ---
 
@@ -54,6 +56,7 @@ This API serves as the backend for an Expo/React Native mobile app. Features:
 | Documentation | Swagger / OpenAPI (Swashbuckle 6) |
 | Testing | xUnit + FluentAssertions + Moq + AutoFixture |
 | Containerization | Docker + docker-compose |
+| MCP Server | ModelContextProtocol SDK 1.2 (C# MCP) |
 
 ---
 
@@ -65,6 +68,9 @@ The solution follows **Clean Architecture** with strict dependency rules:
 ┌─────────────────────────────────────────────────────────────────┐
 │  API (BabyFoodChecklist.API)                                    │
 │  • Controllers, Middleware, Program.cs                          │
+├─────────────────────────────────────────────────────────────────┤
+│  MCP Server (BabyFoodChecklist.McpServer)                       │
+│  • MCP Tools (Product, Entry, Statistics, Nutrition Advisor)    │
 ├─────────────────────────────────────────────────────────────────┤
 │  Infrastructure (BabyFoodChecklist.Infrastructure)              │
 │  • EF Core DbContext, Entity Configurations, Repositories, Seeder │
@@ -81,6 +87,7 @@ The solution follows **Clean Architecture** with strict dependency rules:
 - **Application** depends only on Domain.
 - **Infrastructure** depends on Application + Domain.
 - **API** depends on Application + Infrastructure (for DI wiring only).
+- **MCP Server** depends on Application + Infrastructure (same pattern as API — a separate host).
 
 ---
 
@@ -170,7 +177,101 @@ List endpoints use OData for filtering, sorting, and pagination:
 
 ---
 
-## Database
+## MCP Server
+
+The solution includes an **MCP (Model Context Protocol) Server** that gives AI assistants (Claude, GitHub Copilot, etc.) structured access to your baby food data and nutrition advice.
+
+### What is MCP?
+
+[Model Context Protocol](https://modelcontextprotocol.io/) is an open protocol that lets AI assistants call tools and access data from external systems. The MCP server runs locally, connects to the same PostgreSQL database as the API, and exposes 12 tools.
+
+### Running the MCP Server
+
+```bash
+# Make sure PostgreSQL is running first
+docker-compose up postgres -d
+
+# Run the MCP server
+dotnet run --project src/BabyFoodChecklist.McpServer
+```
+
+### Available Tools
+
+#### Data Explorer Tools (read from database)
+
+| Tool | Description |
+|------|-------------|
+| `get_all_products` | List all 126+ products with bilingual names, grouped by category |
+| `get_product_by_name` | Search products by Ukrainian or English name (partial match) |
+| `get_products_by_category` | Get all products in a specific category |
+| `get_statistics` | Get overall + per-category progress with visual progress bars |
+| `get_tried_foods` | List all foods baby has tried, with ratings, dates, and notes |
+| `get_untried_foods` | List foods not yet tried, optionally filtered by category |
+| `get_food_entries_with_reactions` | Get entries with reaction notes (allergy tracking) |
+
+#### Nutrition Advisor Tools (smart recommendations)
+
+| Tool | Description |
+|------|-------------|
+| `suggest_next_foods` | Age-appropriate food suggestions based on current progress |
+| `get_allergen_info` | Allergen risks and safety guidelines for a specific food |
+| `analyze_diet_balance` | Identify nutritional gaps across food categories |
+| `get_introduction_schedule` | Generate a weekly plan for introducing new foods |
+| `get_category_recommendations` | Detailed recommendations for a specific food category |
+
+### Configuring with Claude Desktop
+
+Add this to your Claude Desktop configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "baby-food-checklist": {
+      "command": "dotnet",
+      "args": ["run", "--project", "/path/to/baby-food-checklist-api/src/BabyFoodChecklist.McpServer"],
+      "env": {
+        "ConnectionStrings__DefaultConnection": "Host=localhost;Port=5432;Database=babyfoodchecklist;Username=postgres;Password=postgres"
+      }
+    }
+  }
+}
+```
+
+### Configuring with VS Code (GitHub Copilot)
+
+Add to your `.vscode/mcp.json` or VS Code `settings.json`:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "baby-food-checklist": {
+        "command": "dotnet",
+        "args": ["run", "--project", "${workspaceFolder}/src/BabyFoodChecklist.McpServer"],
+        "env": {
+          "ConnectionStrings__DefaultConnection": "Host=localhost;Port=5432;Database=babyfoodchecklist;Username=postgres;Password=postgres"
+        }
+      }
+    }
+  }
+}
+```
+
+### Example Conversations
+
+Once configured, you can ask your AI assistant:
+
+- *"What fruits hasn't my baby tried yet?"*
+- *"My baby is 8 months old — what should we try next?"*
+- *"Show me the allergen info for peanut butter"*
+- *"Is our diet balanced? What categories are we missing?"*
+- *"Create a 2-week schedule for introducing new foods"*
+- *"Show me all foods with reaction notes"*
+
+---
 
 ### Schema
 
@@ -254,9 +355,12 @@ baby-food-checklist-api/
 │   │   ├── Data/                        # DbContext, entity configurations, OData, seeders, interceptors
 │   │   └── Repositories/               # BaseRepository<T>
 │   │
-│   └── BabyFoodChecklist.API/           # Controllers, middleware, startup
-│       ├── Controllers/                 # Products, Entries, Statistics, Categories + OData
-│       └── Middleware/                  # ExceptionHandlingMiddleware
+│   ├── BabyFoodChecklist.API/           # Controllers, middleware, startup
+│   │   ├── Controllers/                 # Products, Entries, Statistics, Categories + OData
+│   │   └── Middleware/                  # ExceptionHandlingMiddleware
+│   │
+│   └── BabyFoodChecklist.McpServer/     # MCP Server for AI assistant integration
+│       └── Tools/                       # ProductTools, EntryTools, StatisticsTools, NutritionAdvisorTools
 │
 ├── tests/
 │   └── BabyFoodChecklist.Tests/         # Unit tests (xUnit + Moq + AutoFixture)

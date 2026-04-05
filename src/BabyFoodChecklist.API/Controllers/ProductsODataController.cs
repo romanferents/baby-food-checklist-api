@@ -1,17 +1,23 @@
+using BabyFoodChecklist.Application.Common.Interfaces;
 using BabyFoodChecklist.Infrastructure.Data.OData;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace BabyFoodChecklist.API.Controllers;
 
 [Route("odata/v1")]
-public class ProductsODataController(BabyFoodChecklist.Domain.Interfaces.IApplicationDbContext context) : ODataController
+[Authorize]
+public class ProductsODataController(BabyFoodChecklist.Domain.Interfaces.IApplicationDbContext context, ICurrentUserService currentUser) : ODataController
 {
     [HttpGet(ODataEntitySetNames.Products)]
     [EnableQuery]
     public IQueryable<ProductDto> Get()
     {
+        var userId = currentUser.UserId;
+
         return context.Products
+            .Where(p => p.UserId == null || p.UserId == userId)
             .AsNoTracking()
             .Select(p => new ProductDto
             {

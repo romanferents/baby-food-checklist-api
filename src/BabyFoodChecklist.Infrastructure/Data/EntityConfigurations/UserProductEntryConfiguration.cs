@@ -9,6 +9,7 @@ public class UserProductEntryConfiguration : IEntityTypeConfiguration<UserProduc
         builder.HasKey(e => e.Id);
         builder.Property(e => e.ReactionNote).HasMaxLength(500);
         builder.Property(e => e.Notes).HasMaxLength(1000);
-        builder.HasIndex(e => e.ProductId).IsUnique();
+        builder.HasIndex(e => new { e.ProductId, e.UserId }).IsUnique();
+        builder.HasIndex(e => e.UserId);
     }
 }

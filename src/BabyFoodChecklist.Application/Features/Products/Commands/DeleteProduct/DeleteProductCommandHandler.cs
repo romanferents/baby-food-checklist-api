@@ -1,14 +1,18 @@
 using BabyFoodChecklist.Application.Common.Exceptions;
+using BabyFoodChecklist.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace BabyFoodChecklist.Application.Features.Products.Commands.DeleteProduct;
 
-public class DeleteProductCommandHandler(IApplicationDbContext context)
+public class DeleteProductCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     : IRequestHandler<DeleteProductCommand>
 {
     public async Task Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken)
+        var userId = currentUser.UserId;
+
+        var product = await context.Products
+            .FirstOrDefaultAsync(p => p.Id == request.Id && (p.UserId == null || p.UserId == userId), cancellationToken)
             ?? throw new NotFoundException(nameof(Product), request.Id);
 
         if (product.IsDefault)

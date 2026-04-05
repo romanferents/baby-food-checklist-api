@@ -8,5 +8,7 @@ public class Product : NamedEntity
     public ProductCategory Category { get; set; }
     public bool IsDefault { get; set; }
     public int SortOrder { get; set; }
+    public Guid? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
     public ICollection<UserProductEntry> UserEntries { get; set; } = new List<UserProductEntry>();
 }

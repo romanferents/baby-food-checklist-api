@@ -7,6 +7,8 @@ public class UserProductEntry : BaseAuditableEntity
 {
     public Guid ProductId { get; set; }
     public Product Product { get; set; } = null!;
+    public Guid UserId { get; set; }
+    public ApplicationUser User { get; set; } = null!;
     public bool Tried { get; set; }
     public DateTimeOffset? FirstTriedAt { get; set; }
     public FoodRating? Rating { get; set; }
