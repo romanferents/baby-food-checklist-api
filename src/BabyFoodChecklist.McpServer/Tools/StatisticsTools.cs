@@ -83,6 +83,6 @@ public sealed class StatisticsTools
         const int barLength = 20;
         var filled = (int)Math.Round(percentage / 100 * barLength);
         var empty = barLength - filled;
-        return $"[{"█".PadRight(filled, '█')}{"░".PadRight(empty, '░')}]";
+        return $"[{new string('█', filled)}{new string('░', empty)}]";
     }
 }

@@ -161,8 +161,8 @@ public sealed class NutritionAdvisorTools
         CancellationToken cancellationToken)
     {
         var products = await context.Products.AsNoTracking().ToListAsync(cancellationToken);
+        var productLookup = products.ToDictionary(p => p.Id);
         var entries = await context.UserProductEntries.AsNoTracking()
-            .Include(e => e.Product)
             .Where(e => e.Tried)
             .ToListAsync(cancellationToken);
 
@@ -178,7 +178,8 @@ public sealed class NutritionAdvisorTools
 
         var totalTried = entries.Count;
         var categoryDistribution = entries
-            .GroupBy(e => e.Product.Category)
+            .Where(e => productLookup.ContainsKey(e.ProductId))
+            .GroupBy(e => productLookup[e.ProductId].Category)
             .Select(g => new { Category = g.Key, Count = g.Count(), Percentage = Math.Round(g.Count() / (double)totalTried * 100, 1) })
             .OrderByDescending(c => c.Percentage)
             .ToList();
@@ -226,10 +227,12 @@ public sealed class NutritionAdvisorTools
             sb.AppendLine($"- **Diversify**: Diet is heavily concentrated in {string.Join(", ", overConcentrated.Select(c => CategoryHelper.GetNameEn(c.Category)))}. Try exploring other categories.");
         }
 
-        var dislikedFoods = entries.Where(e => e.Rating == FoodRating.Disliked).ToList();
+        var dislikedFoods = entries
+            .Where(e => e.Rating == FoodRating.Disliked && productLookup.ContainsKey(e.ProductId))
+            .ToList();
         if (dislikedFoods.Count > 0)
         {
-            sb.AppendLine($"- **Re-try disliked foods**: Babies may need 10-15 exposures. Consider re-introducing: {string.Join(", ", dislikedFoods.Take(3).Select(e => e.Product.NameEn))}");
+            sb.AppendLine($"- **Re-try disliked foods**: Babies may need 10-15 exposures. Consider re-introducing: {string.Join(", ", dislikedFoods.Take(3).Select(e => productLookup[e.ProductId].NameEn))}");
         }
 
         return sb.ToString();
@@ -326,9 +329,11 @@ public sealed class NutritionAdvisorTools
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
 
+        var productIds = products.Select(p => p.Id).ToHashSet();
+
         var entries = await context.UserProductEntries
             .AsNoTracking()
-            .Where(e => products.Select(p => p.Id).Contains(e.ProductId))
+            .Where(e => productIds.Contains(e.ProductId))
             .ToListAsync(cancellationToken);
 
         var triedIds = entries.Where(e => e.Tried).Select(e => e.ProductId).ToHashSet();
