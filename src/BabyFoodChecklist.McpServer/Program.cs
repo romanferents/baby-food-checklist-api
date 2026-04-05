@@ -1,4 +1,5 @@
 using BabyFoodChecklist.Application;
+using BabyFoodChecklist.Application.Common.Interfaces;
 using BabyFoodChecklist.Infrastructure;
 using BabyFoodChecklist.McpServer.Tools;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,10 @@ try
     builder.Services.AddApplicationServices();
     builder.Services.AddInfrastructureServices(builder.Configuration);
 
+    // MCP server does not have HTTP context — tools accept userId as a parameter.
+    // Register a no-op ICurrentUserService so the DI container can resolve Application handlers.
+    builder.Services.AddScoped<ICurrentUserService, McpCurrentUserService>();
+
     // Register MCP server with stdio transport and all tool classes
     builder.Services.AddMcpServer()
         .WithStdioServerTransport()
@@ -51,4 +56,13 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
+}
+
+/// <summary>
+/// No-op implementation of ICurrentUserService for the MCP server.
+/// MCP tools accept userId as a parameter rather than from HttpContext.
+/// </summary>
+internal sealed class McpCurrentUserService : ICurrentUserService
+{
+    public Guid? UserId => null;
 }

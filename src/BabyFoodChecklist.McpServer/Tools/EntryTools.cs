@@ -14,15 +14,18 @@ public sealed class EntryTools
     [McpServerTool(Name = "get_tried_foods"), Description(
         "Get all foods the baby has tried, including ratings, dates, and notes. " +
         "Shows when each food was first tried, how the baby rated it (Liked/Neutral/Disliked), " +
-        "any reaction notes, and whether it's marked as a favorite.")]
+        "any reaction notes, and whether it's marked as a favorite. Requires userId.")]
     public static async Task<string> GetTriedFoods(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose tried foods to retrieve.")] string userId,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         var entries = await context.UserProductEntries
             .AsNoTracking()
             .Include(e => e.Product)
-            .Where(e => e.Tried)
+            .Where(e => e.UserId == parsedUserId && e.Tried)
             .OrderByDescending(e => e.FirstTriedAt)
             .ToListAsync(cancellationToken);
 
@@ -76,21 +79,25 @@ public sealed class EntryTools
     [McpServerTool(Name = "get_untried_foods"), Description(
         "Get all foods the baby has NOT tried yet. " +
         "Useful for finding new foods to introduce. " +
-        "Optionally filter by category to focus on specific food groups.")]
+        "Optionally filter by category to focus on specific food groups. Requires userId.")]
     public static async Task<string> GetUntriedFoods(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose untried foods to retrieve.")] string userId,
         [Description("Optional category filter (e.g., 'Fruits', 'Vegetables'). Leave empty for all categories.")] string? category,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         var triedProductIds = await context.UserProductEntries
             .AsNoTracking()
-            .Where(e => e.Tried)
+            .Where(e => e.UserId == parsedUserId && e.Tried)
             .Select(e => e.ProductId)
             .ToListAsync(cancellationToken);
 
         var triedSet = triedProductIds.ToHashSet();
 
-        var query = context.Products.AsNoTracking().AsQueryable();
+        var query = context.Products.AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == parsedUserId);
 
         if (!string.IsNullOrWhiteSpace(category) &&
             Enum.TryParse<ProductCategory>(category, ignoreCase: true, out var parsedCategory))
@@ -135,15 +142,18 @@ public sealed class EntryTools
 
     [McpServerTool(Name = "get_food_entries_with_reactions"), Description(
         "Get all food entries that have reaction notes recorded. " +
-        "This is important for allergy tracking and identifying foods that caused adverse reactions.")]
+        "This is important for allergy tracking and identifying foods that caused adverse reactions. Requires userId.")]
     public static async Task<string> GetFoodEntriesWithReactions(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose reaction entries to retrieve.")] string userId,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         var entries = await context.UserProductEntries
             .AsNoTracking()
             .Include(e => e.Product)
-            .Where(e => e.ReactionNote != null && e.ReactionNote != "")
+            .Where(e => e.UserId == parsedUserId && e.ReactionNote != null && e.ReactionNote != "")
             .OrderByDescending(e => e.FirstTriedAt)
             .ToListAsync(cancellationToken);
 

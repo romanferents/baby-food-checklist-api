@@ -1,8 +1,9 @@
+using BabyFoodChecklist.Application.Common.Interfaces;
 using BabyFoodChecklist.Application.DTOs;
 
 namespace BabyFoodChecklist.Application.Features.Products.Commands.CreateProduct;
 
-public class CreateProductCommandHandler(IApplicationDbContext context, IMapper mapper)
+public class CreateProductCommandHandler(IApplicationDbContext context, IMapper mapper, ICurrentUserService currentUser)
     : IRequestHandler<CreateProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)
@@ -13,6 +14,7 @@ public class CreateProductCommandHandler(IApplicationDbContext context, IMapper 
             NameEn = request.NameEn,
             Category = request.Category,
             IsDefault = false,
+            UserId = currentUser.UserId,
         };
 
         await context.Products.AddAsync(product, cancellationToken);

@@ -14,13 +14,18 @@ public sealed class ProductTools
     [McpServerTool(Name = "get_all_products"), Description(
         "Get all baby food products from the database, grouped by category. " +
         "Returns bilingual names (Ukrainian and English) for each product and category. " +
-        "Use this to see the complete list of 126+ foods across 9 categories.")]
+        "Use this to see the complete list of 126+ foods across 9 categories. " +
+        "Requires userId to show user-specific custom products alongside default products.")]
     public static async Task<string> GetAllProducts(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) to filter products for. Shows default products + user's custom products.")] string userId,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         var products = await context.Products
             .AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == parsedUserId)
             .OrderBy(p => p.Category)
             .ThenBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
@@ -55,15 +60,18 @@ public sealed class ProductTools
         "Returns product details including category, bilingual names, and whether it's a default product.")]
     public static async Task<string> GetProductByName(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) to filter products for.")] string userId,
         [Description("Product name to search for (in English or Ukrainian). Supports partial matching.")] string name,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
         var normalizedName = name.ToLowerInvariant();
 
         var products = await context.Products
             .AsNoTracking()
-            .Where(p => p.NameEn.ToLower().Contains(normalizedName) ||
-                        p.NameUk.ToLower().Contains(normalizedName))
+            .Where(p => (p.UserId == null || p.UserId == parsedUserId) &&
+                        (p.NameEn.ToLower().Contains(normalizedName) ||
+                         p.NameUk.ToLower().Contains(normalizedName)))
             .OrderBy(p => p.Category)
             .ThenBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
@@ -95,9 +103,12 @@ public sealed class ProductTools
         "Available categories: Vegetables, Fruits, Dairy, Meat, Grains, NutsSeeds, Fish, Spices, Other.")]
     public static async Task<string> GetProductsByCategory(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) to filter products for.")] string userId,
         [Description("Category name (e.g., 'Vegetables', 'Fruits', 'Dairy', 'Meat', 'Grains', 'NutsSeeds', 'Fish', 'Spices', 'Other')")] string category,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         if (!Enum.TryParse<ProductCategory>(category, ignoreCase: true, out var parsedCategory))
         {
             var validCategories = string.Join(", ", Enum.GetNames<ProductCategory>());
@@ -106,7 +117,7 @@ public sealed class ProductTools
 
         var products = await context.Products
             .AsNoTracking()
-            .Where(p => p.Category == parsedCategory)
+            .Where(p => p.Category == parsedCategory && (p.UserId == null || p.UserId == parsedUserId))
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
 

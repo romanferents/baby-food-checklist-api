@@ -14,17 +14,22 @@ public sealed class StatisticsTools
     [McpServerTool(Name = "get_statistics"), Description(
         "Get overall and per-category progress statistics for the baby's food journey. " +
         "Shows total products, how many have been tried, and progress percentage " +
-        "both overall and broken down by each food category.")]
+        "both overall and broken down by each food category. Requires userId.")]
     public static async Task<string> GetStatistics(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose statistics to retrieve.")] string userId,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         var products = await context.Products
             .AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == parsedUserId)
             .ToListAsync(cancellationToken);
 
         var entries = await context.UserProductEntries
             .AsNoTracking()
+            .Where(e => e.UserId == parsedUserId)
             .ToListAsync(cancellationToken);
 
         var triedProductIds = entries.Where(e => e.Tried).Select(e => e.ProductId).ToHashSet();

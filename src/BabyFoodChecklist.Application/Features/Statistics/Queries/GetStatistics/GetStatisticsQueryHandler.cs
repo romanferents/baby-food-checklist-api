@@ -1,16 +1,26 @@
 using BabyFoodChecklist.Application.Common.Helpers;
+using BabyFoodChecklist.Application.Common.Interfaces;
 using BabyFoodChecklist.Application.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace BabyFoodChecklist.Application.Features.Statistics.Queries.GetStatistics;
 
-public class GetStatisticsQueryHandler(IApplicationDbContext context)
+public class GetStatisticsQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     : IRequestHandler<GetStatisticsQuery, StatisticsDto>
 {
     public async Task<StatisticsDto> Handle(GetStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var products = await context.Products.AsNoTracking().ToListAsync(cancellationToken);
-        var entries = await context.UserProductEntries.AsNoTracking().ToListAsync(cancellationToken);
+        var userId = currentUser.UserId;
+
+        var products = await context.Products
+            .AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == userId)
+            .ToListAsync(cancellationToken);
+
+        var entries = await context.UserProductEntries
+            .AsNoTracking()
+            .Where(e => e.UserId == userId)
+            .ToListAsync(cancellationToken);
 
         var triedProductIds = entries.Where(e => e.Tried).Select(e => e.ProductId).ToHashSet();
 

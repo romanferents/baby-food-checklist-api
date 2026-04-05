@@ -9,6 +9,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Product> Products => Set<Product>();
     public DbSet<UserProductEntry> UserProductEntries => Set<UserProductEntry>();
+    public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

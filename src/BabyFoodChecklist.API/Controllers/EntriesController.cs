@@ -1,12 +1,14 @@
 using Asp.Versioning;
 using BabyFoodChecklist.Application.Features.Entries.Commands.DeleteEntry;
 using BabyFoodChecklist.Application.Features.Entries.Commands.UpsertEntry;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BabyFoodChecklist.API.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
+[Authorize]
 public class EntriesController(ISender sender) : ControllerBase
 {
     [HttpPost]

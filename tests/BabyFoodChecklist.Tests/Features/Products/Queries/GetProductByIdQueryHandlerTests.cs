@@ -10,12 +10,17 @@ namespace BabyFoodChecklist.Tests.Features.Products.Queries;
 public class GetProductByIdQueryHandlerTests
 {
     private Mock<IApplicationDbContext> _contextMock = null!;
+    private Mock<ICurrentUserService> _currentUserMock = null!;
     private IMapper _mapper = null!;
+    private Guid _testUserId;
 
     [SetUp]
     public void SetUp()
     {
         _contextMock = new Mock<IApplicationDbContext>();
+        _currentUserMock = new Mock<ICurrentUserService>();
+        _testUserId = Guid.NewGuid();
+        _currentUserMock.Setup(c => c.UserId).Returns(_testUserId);
         var config = new MapperConfiguration(c => c.AddProfile<ProductMappingProfile>(), NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
     }
@@ -31,11 +36,12 @@ public class GetProductByIdQueryHandlerTests
             Category = ProductCategory.Vegetables,
             IsDefault = true,
             SortOrder = 1,
+            UserId = null, // default product
         };
         var products = new List<Product> { product }.AsQueryable().BuildMockDbSet();
         _contextMock.Setup(c => c.Products).Returns(products.Object);
 
-        var handler = new GetProductByIdQueryHandler(_contextMock.Object, _mapper);
+        var handler = new GetProductByIdQueryHandler(_contextMock.Object, _mapper, _currentUserMock.Object);
 
         var result = await handler.Handle(new GetProductByIdQuery(product.Id), CancellationToken.None);
 
@@ -51,7 +57,7 @@ public class GetProductByIdQueryHandlerTests
         var products = new List<Product>().AsQueryable().BuildMockDbSet();
         _contextMock.Setup(c => c.Products).Returns(products.Object);
 
-        var handler = new GetProductByIdQueryHandler(_contextMock.Object, _mapper);
+        var handler = new GetProductByIdQueryHandler(_contextMock.Object, _mapper, _currentUserMock.Object);
 
         var act = async () => await handler.Handle(new GetProductByIdQuery(Guid.NewGuid()), CancellationToken.None);
 

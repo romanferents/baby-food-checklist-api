@@ -15,5 +15,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OData" />
     <PackageReference Include="Microsoft.OData.Edm" />
     <PackageReference Include="Microsoft.OData.Core" />
+    <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
 </Project>

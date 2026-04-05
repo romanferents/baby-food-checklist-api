@@ -1,3 +1,5 @@
+using BabyFoodChecklist.Application.Common.Interfaces;
+using BabyFoodChecklist.Infrastructure.Auth;
 using BabyFoodChecklist.Infrastructure.Data;
 using BabyFoodChecklist.Infrastructure.Data.Interceptors;
 using BabyFoodChecklist.Infrastructure.Repositories;
@@ -23,6 +25,20 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+
+        // Auth services
+        var jwtSection = configuration.GetSection(JwtSettings.SectionName);
+        services.Configure<JwtSettings>(opts =>
+        {
+            opts.SecretKey = jwtSection[nameof(JwtSettings.SecretKey)] ?? string.Empty;
+            opts.Issuer = jwtSection[nameof(JwtSettings.Issuer)] ?? string.Empty;
+            opts.Audience = jwtSection[nameof(JwtSettings.Audience)] ?? string.Empty;
+            if (int.TryParse(jwtSection[nameof(JwtSettings.ExpirationInMinutes)], out var exp))
+            {
+                opts.ExpirationInMinutes = exp;
+            }
+        });
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }

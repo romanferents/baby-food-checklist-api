@@ -14,14 +14,21 @@ public sealed class NutritionAdvisorTools
     [McpServerTool(Name = "suggest_next_foods"), Description(
         "Suggest the next baby foods to introduce based on current progress and baby's age in months. " +
         "Analyzes which categories are underrepresented and recommends age-appropriate foods. " +
-        "Takes into account allergen safety and balanced nutrition across categories.")]
+        "Takes into account allergen safety and balanced nutrition across categories. Requires userId.")]
     public static async Task<string> SuggestNextFoods(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose food progress to analyze.")] string userId,
         [Description("Baby's age in months (e.g., 6, 8, 10, 12)")] int ageInMonths,
         CancellationToken cancellationToken)
     {
-        var products = await context.Products.AsNoTracking().ToListAsync(cancellationToken);
-        var entries = await context.UserProductEntries.AsNoTracking().ToListAsync(cancellationToken);
+        Guid.TryParse(userId, out var parsedUserId);
+
+        var products = await context.Products.AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == parsedUserId)
+            .ToListAsync(cancellationToken);
+        var entries = await context.UserProductEntries.AsNoTracking()
+            .Where(e => e.UserId == parsedUserId)
+            .ToListAsync(cancellationToken);
         var triedIds = entries.Where(e => e.Tried).Select(e => e.ProductId).ToHashSet();
 
         var sb = new StringBuilder();
@@ -110,16 +117,19 @@ public sealed class NutritionAdvisorTools
         "Search by product name in English or Ukrainian.")]
     public static async Task<string> GetAllergenInfo(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) to check for existing reaction notes.")] string userId,
         [Description("Product name to check (in English or Ukrainian)")] string productName,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
         var normalizedName = productName.ToLowerInvariant();
 
         var product = await context.Products
             .AsNoTracking()
             .FirstOrDefaultAsync(p =>
-                p.NameEn.ToLower().Contains(normalizedName) ||
-                p.NameUk.ToLower().Contains(normalizedName),
+                (p.UserId == null || p.UserId == parsedUserId) &&
+                (p.NameEn.ToLower().Contains(normalizedName) ||
+                 p.NameUk.ToLower().Contains(normalizedName)),
                 cancellationToken);
 
         if (product == null)
@@ -135,7 +145,7 @@ public sealed class NutritionAdvisorTools
         // Check if there are existing reaction notes for this product
         var entry = await context.UserProductEntries
             .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.ProductId == product.Id, cancellationToken);
+            .FirstOrDefaultAsync(e => e.ProductId == product.Id && e.UserId == parsedUserId, cancellationToken);
 
         if (entry?.ReactionNote != null)
         {
@@ -158,12 +168,17 @@ public sealed class NutritionAdvisorTools
         "recommendations for a more balanced diet.")]
     public static async Task<string> AnalyzeDietBalance(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose diet balance to analyze.")] string userId,
         CancellationToken cancellationToken)
     {
-        var products = await context.Products.AsNoTracking().ToListAsync(cancellationToken);
+        Guid.TryParse(userId, out var parsedUserId);
+
+        var products = await context.Products.AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == parsedUserId)
+            .ToListAsync(cancellationToken);
         var productLookup = products.ToDictionary(p => p.Id);
         var entries = await context.UserProductEntries.AsNoTracking()
-            .Where(e => e.Tried)
+            .Where(e => e.UserId == parsedUserId && e.Tried)
             .ToListAsync(cancellationToken);
 
         var sb = new StringBuilder();
@@ -244,13 +259,19 @@ public sealed class NutritionAdvisorTools
         "(3-5 day wait between new foods).")]
     public static async Task<string> GetIntroductionSchedule(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose schedule to generate.")] string userId,
         [Description("Number of weeks to plan for (1-4, default 2)")] int weeks,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
         weeks = Math.Clamp(weeks, 1, 4);
 
-        var products = await context.Products.AsNoTracking().ToListAsync(cancellationToken);
-        var entries = await context.UserProductEntries.AsNoTracking().ToListAsync(cancellationToken);
+        var products = await context.Products.AsNoTracking()
+            .Where(p => p.UserId == null || p.UserId == parsedUserId)
+            .ToListAsync(cancellationToken);
+        var entries = await context.UserProductEntries.AsNoTracking()
+            .Where(e => e.UserId == parsedUserId)
+            .ToListAsync(cancellationToken);
         var triedIds = entries.Where(e => e.Tried).Select(e => e.ProductId).ToHashSet();
 
         var untriedProducts = products.Where(p => !triedIds.Contains(p.Id)).ToList();
@@ -314,9 +335,12 @@ public sealed class NutritionAdvisorTools
         "to introduce and how commonly they appear in baby diets.")]
     public static async Task<string> GetCategoryRecommendations(
         IApplicationDbContext context,
+        [Description("The user ID (GUID) whose category progress to analyze.")] string userId,
         [Description("Food category to get recommendations for (e.g., 'Fish', 'Grains', 'NutsSeeds')")] string category,
         CancellationToken cancellationToken)
     {
+        Guid.TryParse(userId, out var parsedUserId);
+
         if (!Enum.TryParse<ProductCategory>(category, ignoreCase: true, out var parsedCategory))
         {
             var validCategories = string.Join(", ", Enum.GetNames<ProductCategory>());
@@ -325,7 +349,7 @@ public sealed class NutritionAdvisorTools
 
         var products = await context.Products
             .AsNoTracking()
-            .Where(p => p.Category == parsedCategory)
+            .Where(p => p.Category == parsedCategory && (p.UserId == null || p.UserId == parsedUserId))
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
 
@@ -333,7 +357,7 @@ public sealed class NutritionAdvisorTools
 
         var entries = await context.UserProductEntries
             .AsNoTracking()
-            .Where(e => productIds.Contains(e.ProductId))
+            .Where(e => e.UserId == parsedUserId && productIds.Contains(e.ProductId))
             .ToListAsync(cancellationToken);
 
         var triedIds = entries.Where(e => e.Tried).Select(e => e.ProductId).ToHashSet();
