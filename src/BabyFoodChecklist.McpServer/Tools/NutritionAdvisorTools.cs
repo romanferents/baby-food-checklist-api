@@ -21,7 +21,8 @@ public sealed class NutritionAdvisorTools
         [Description("Baby's age in months (e.g., 6, 8, 10, 12)")] int ageInMonths,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var products = await context.Products.AsNoTracking()
             .Where(p => p.UserId == null || p.UserId == parsedUserId)
@@ -121,7 +122,8 @@ public sealed class NutritionAdvisorTools
         [Description("Product name to check (in English or Ukrainian)")] string productName,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
         var normalizedName = productName.ToLowerInvariant();
 
         var product = await context.Products
@@ -171,7 +173,8 @@ public sealed class NutritionAdvisorTools
         [Description("The user ID (GUID) whose diet balance to analyze.")] string userId,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var products = await context.Products.AsNoTracking()
             .Where(p => p.UserId == null || p.UserId == parsedUserId)
@@ -263,7 +266,8 @@ public sealed class NutritionAdvisorTools
         [Description("Number of weeks to plan for (1-4, default 2)")] int weeks,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
         weeks = Math.Clamp(weeks, 1, 4);
 
         var products = await context.Products.AsNoTracking()
@@ -339,7 +343,8 @@ public sealed class NutritionAdvisorTools
         [Description("Food category to get recommendations for (e.g., 'Fish', 'Grains', 'NutsSeeds')")] string category,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         if (!Enum.TryParse<ProductCategory>(category, ignoreCase: true, out var parsedCategory))
         {

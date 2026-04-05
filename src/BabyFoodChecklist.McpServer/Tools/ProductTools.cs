@@ -21,7 +21,8 @@ public sealed class ProductTools
         [Description("The user ID (GUID) to filter products for. Shows default products + user's custom products.")] string userId,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var products = await context.Products
             .AsNoTracking()
@@ -64,7 +65,8 @@ public sealed class ProductTools
         [Description("Product name to search for (in English or Ukrainian). Supports partial matching.")] string name,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
         var normalizedName = name.ToLowerInvariant();
 
         var products = await context.Products
@@ -107,7 +109,8 @@ public sealed class ProductTools
         [Description("Category name (e.g., 'Vegetables', 'Fruits', 'Dairy', 'Meat', 'Grains', 'NutsSeeds', 'Fish', 'Spices', 'Other')")] string category,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         if (!Enum.TryParse<ProductCategory>(category, ignoreCase: true, out var parsedCategory))
         {

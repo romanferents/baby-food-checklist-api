@@ -21,11 +21,6 @@ public class UpdateProductCommandHandler(IApplicationDbContext context, IMapper 
             throw new ForbiddenException("Default products cannot be modified.");
         }
 
-        if (product.UserId != userId)
-        {
-            throw new ForbiddenException("You can only modify your own custom products.");
-        }
-
         product.NameUk = request.NameUk;
         product.NameEn = request.NameEn;
         product.Category = request.Category;

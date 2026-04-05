@@ -20,7 +20,8 @@ public sealed class StatisticsTools
         [Description("The user ID (GUID) whose statistics to retrieve.")] string userId,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var products = await context.Products
             .AsNoTracking()

@@ -20,7 +20,8 @@ public sealed class EntryTools
         [Description("The user ID (GUID) whose tried foods to retrieve.")] string userId,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var entries = await context.UserProductEntries
             .AsNoTracking()
@@ -86,7 +87,8 @@ public sealed class EntryTools
         [Description("Optional category filter (e.g., 'Fruits', 'Vegetables'). Leave empty for all categories.")] string? category,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var triedProductIds = await context.UserProductEntries
             .AsNoTracking()
@@ -148,7 +150,8 @@ public sealed class EntryTools
         [Description("The user ID (GUID) whose reaction entries to retrieve.")] string userId,
         CancellationToken cancellationToken)
     {
-        Guid.TryParse(userId, out var parsedUserId);
+        var (isValid, parsedUserId, error) = UserIdParser.Parse(userId);
+        if (!isValid) return error!;
 
         var entries = await context.UserProductEntries
             .AsNoTracking()

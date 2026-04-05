@@ -20,11 +20,6 @@ public class DeleteProductCommandHandler(IApplicationDbContext context, ICurrent
             throw new ForbiddenException("Default products cannot be deleted.");
         }
 
-        if (product.UserId != userId)
-        {
-            throw new ForbiddenException("You can only delete your own custom products.");
-        }
-
         context.Products.Remove(product);
         await context.SaveChangesAsync(cancellationToken);
     }
