@@ -104,6 +104,25 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -115,6 +134,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
